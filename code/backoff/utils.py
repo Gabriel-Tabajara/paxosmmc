@@ -13,7 +13,7 @@ class BallotNumber(namedtuple('BallotNumber',['round','leader_id'])):
     def __str__(self):
         return "BN(%d,%s)" % (self.round, str(self.leader_id))
 
-class PValue(namedtuple('PValue',['ballot_number','slot_number','command'])):
+class PValue(namedtuple('PValue',['ballot_number','slot_number','command', 'trace_id'])):
     """
     PValue is a triple consisting of a ballot number, a slot number, a command.
     """
@@ -21,7 +21,7 @@ class PValue(namedtuple('PValue',['ballot_number','slot_number','command'])):
     def __str__(self):
         return "PV(%s,%s,%s)" % (str(self.ballot_number),
                                  str(self.slot_number),
-                                 str(self.command))
+                                 str(self.command), str(self.trace_id))
 
 class Command(namedtuple('Command',['client','req_id','op'])):
     """

@@ -1,5 +1,5 @@
 from process import Process
-from message import ProposeMessage,DecisionMessage,RequestMessage
+from message import ProposeMessage,DecisionMessage,RequestMessage, ResponseMessage
 from utils import *
 import time
 
@@ -11,6 +11,7 @@ class Replica(Process):
         self.decisions = {}
         self.requests = []
         self.config = config
+        self.clientsRecord = {}
         self.env.addProc(self)
 
     def propose(self):
@@ -33,18 +34,20 @@ class Replica(Process):
             # until WINDOW slots later. This allows up to WINDOW slots
             # to have proposals pending.
             if self.slot_in > WINDOW and self.slot_in-WINDOW in self.decisions:
-                if isinstance(self.decisions[self.slot_in-WINDOW], ReconfigCommand):
-                    r,a,l = self.decisions[self.slot_in-WINDOW].config.split(';')
+                if isinstance(self.decisions[self.slot_in-WINDOW].command, ReconfigCommand):
+                    r,a,l = self.decisions[self.slot_in-WINDOW].command.config.split(';')
                     self.config = Config(r.split(','), a.split(','), l.split(','))
-                    print self.id, ": new config:", self.config
+                    # print self.id, ": new config:", self.config
             if self.slot_in not in self.decisions:
-                cmd = self.requests.pop(0)
-                self.proposals[self.slot_in] = cmd
+                received_msg = self.requests.pop(0)
+                self.proposals[self.slot_in] = received_msg
                 for ldr in self.config.leaders:
-                    self.sendMessage(ldr, ProposeMessage(self.id, self.slot_in, cmd))
+                    message = ProposeMessage(self.id, self.slot_in, received_msg.command, received_msg.trace_id)
+                    # print self.id, ": sending propose", self.slot_in, ":", received_msg.command, "to", ldr
+                    self.sendMessage(ldr, message)
             self.slot_in +=1
 
-    def perform(self, cmd):
+    def perform(self, msg):
         """
         This function is invoked with the same sequence of commands at
         all replicas. First, it checks to see if it has already
@@ -57,13 +60,13 @@ class Replica(Process):
         the function increments slot out.
         """
         for s in range(1, self.slot_out):
-            if self.decisions[s] == cmd:
+            if self.decisions[s].command == msg.command:
                 self.slot_out += 1
                 return
-        if isinstance(cmd, ReconfigCommand):
+        if isinstance(msg.command, ReconfigCommand):
             self.slot_out += 1
             return
-        print self.id, ": perform", self.slot_out, ":", cmd
+        # print self.id, ": perform", self.slot_out, ":", cmd
         self.slot_out += 1
 
     def body(self):
@@ -90,15 +93,42 @@ class Replica(Process):
         while True:
             msg = self.getNextMessage()
             if isinstance(msg, RequestMessage):
-                self.requests.append(msg.command)
+                # print self.id, ": received request", msg.command, msg.trace_id
+                self.requests.append(msg)
+                self.clientsRecord[msg.trace_id] = msg.src
             elif isinstance(msg, DecisionMessage):
-                self.decisions[msg.slot_number] = msg.command
+                self.decisions[msg.slot_number] = msg
                 while self.slot_out in self.decisions:
                     if self.slot_out in self.proposals:
-                        if self.proposals[self.slot_out] != self.decisions[self.slot_out]:
+                        if self.proposals[self.slot_out].command != self.decisions[self.slot_out].command:
                             self.requests.append(self.proposals[self.slot_out])
+                            # is_ready_for_response = False
                         del self.proposals[self.slot_out]
                     self.perform(self.decisions[self.slot_out])
+                # if is_ready_for_response == True:
+                if msg.trace_id in self.clientsRecord:
+                    client_id = self.clientsRecord[msg.trace_id]
+                    slots_to_remove = []
+                    for slot in self.proposals:
+                        if self.proposals[slot].trace_id == msg.trace_id:
+                            slots_to_remove.append(slot)
+                    for slot in slots_to_remove:
+                        del self.proposals[slot]
+                    del self.clientsRecord[msg.trace_id]
+                    self.sendMessage(client_id, ResponseMessage(self.id, msg.command, msg.slot_number, trace_id=msg.trace_id))
+                    # self.printSlots()
+                else:
+                    # print "Replica: unknown trace id %s" % (msg)
+                    pass
             else:
-                print "Replica: unknown msg type"
+                # print "Replica: unknown msg type"
+                pass
             self.propose()
+
+    def printSlots(self):
+        slots_traces = {}
+        for self.slot_out in self.decisions:
+            slots_traces[self.slot_out] = self.decisions[self.slot_out].trace_id
+        print 'Slots: ', slots_traces
+        print '\n\n'
+     

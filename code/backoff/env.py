@@ -6,10 +6,10 @@ from process import Process
 from replica import Replica
 from utils import *
 
-NACCEPTORS = 3
-NREPLICAS = 2
-NLEADERS = 2
-NREQUESTS = 40
+NACCEPTORS = 7
+NREPLICAS = 3
+NLEADERS = 3
+NREQUESTS = 1
 NCONFIGS = 3
 
 class Env:
@@ -30,6 +30,33 @@ class Env:
 
     def removeProc(self, pid):
         del self.procs[pid]
+
+    def createReplicas(self, initialconfig):
+        for i in range(NREPLICAS):
+            pid = "replica %d" % i
+            Replica(self, pid, initialconfig)
+            initialconfig.replicas.append(pid)
+        return initialconfig
+    
+    def createAcceptors(self, initialconfig, c):
+        for i in range(NACCEPTORS):
+            pid = "acceptor %d.%d" % (c,i)
+            Acceptor(self, pid)
+            initialconfig.acceptors.append(pid)
+        return initialconfig
+    
+    def createLeaders(self, initialconfig, c):
+        for i in range(NLEADERS):
+            pid = "leader %d.%d" % (c,i)
+            Leader(self, pid, initialconfig)
+            initialconfig.leaders.append(pid)
+        return initialconfig
+    
+    # def sendRequest(self, initialconfig, c, i):
+    #     pid = "client %d.%d" % (c,i)
+    #     for r in initialconfig.replicas:
+    #         cmd = Command(pid,0,"operation %d.%d" % (c,i))
+    #         self.sendMessage(r, RequestMessage(pid,cmd))
 
     def run(self):
         initialconfig = Config([], [], [])

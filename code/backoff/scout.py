@@ -6,11 +6,12 @@ class Scout(Process):
     The scout runs what is known as phase 1 of the Synod protocol.
     Every scout is created for a specific ballot number.
     """
-    def __init__(self, env, id, leader, acceptors, ballot_number):
+    def __init__(self, env, id, leader, acceptors, ballot_number, trace_id):
         Process.__init__(self, env, id)
         self.leader = leader
         self.acceptors = acceptors
         self.ballot_number = ballot_number
+        self.trace_id = trace_id
         self.env.addProc(self)
 
     def body(self):
@@ -36,7 +37,7 @@ class Scout(Process):
         """
         waitfor = set()
         for a in self.acceptors:
-            self.sendMessage(a, P1aMessage(self.id, self.ballot_number))
+            self.sendMessage(a, P1aMessage(self.id, self.ballot_number, self.trace_id))
             waitfor.add(a)
 
         pvalues = set()
@@ -50,13 +51,14 @@ class Scout(Process):
                         self.sendMessage(self.leader,
                                          AdoptedMessage(self.id,
                                                         self.ballot_number,
-                                                        pvalues))
+                                                        pvalues, self.trace_id))
                         return
                 else:
                     self.sendMessage(self.leader,
                                      PreemptedMessage(self.id,
-                                                      msg.ballot_number))
+                                                      msg.ballot_number, self.trace_id))
                     return
             else:
-                print "Scout: unexpected msg"
+                # print "Scout: unexpected msg"
+                pass
 

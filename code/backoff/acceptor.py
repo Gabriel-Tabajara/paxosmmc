@@ -40,8 +40,9 @@ class Acceptor(Process):
             if isinstance(msg, P1aMessage):
                 if msg.ballot_number > self.ballot_number:
                     self.ballot_number = msg.ballot_number
-                self.sendMessage(msg.src, P1bMessage(self.id, self.ballot_number, self.accepted))
+                self.sendMessage(msg.src, P1bMessage(self.id, self.ballot_number, self.accepted, msg.trace_id))
             elif isinstance(msg, P2aMessage):
                 if msg.ballot_number == self.ballot_number:
-                    self.accepted.add(PValue(msg.ballot_number,msg.slot_number,msg.command))
-                self.sendMessage(msg.src, P2bMessage(self.id, self.ballot_number, msg.slot_number))
+                    self.accepted.add(PValue(msg.ballot_number,msg.slot_number,msg.command,msg.trace_id))
+                # print "Acceptor %s sending P2bMessage to %s" % (self.id, msg)
+                self.sendMessage(msg.src, P2bMessage(self.id, self.ballot_number, msg.slot_number, msg.trace_id))

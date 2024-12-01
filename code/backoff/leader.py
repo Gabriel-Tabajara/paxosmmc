@@ -48,24 +48,28 @@ class Leader(Process):
         """
         print "Here I am: ", self.id
         Scout(self.env, "scout:%s:%s" % (str(self.id), str(self.ballot_number)),
-                    self.id, self.config.acceptors, self.ballot_number)
+                    self.id, self.config.acceptors, self.ballot_number, None)
         while True:
             msg = self.getNextMessage()
             if isinstance(msg, ProposeMessage):
+                # print self.id, ": received propose", msg.command, msg.slot_number, msg.trace_id
                 if msg.slot_number not in self.proposals:
-                    self.proposals[msg.slot_number] = msg.command
+                    self.proposals[msg.slot_number] = msg
                     if self.active:
                         Commander(self.env,"commander:%s:%s:%s" % (str(self.id),
                                                                    str(self.ballot_number),
                                                                    str(msg.slot_number)),
                                   self.id, self.config.acceptors, self.config.replicas,
-                                  self.ballot_number, msg.slot_number, msg.command)
+                                  self.ballot_number, msg.slot_number, msg.command, msg.trace_id)
+                else:
+                    # print "Slot number already in proposals msg.slot_number {} msg.trace_id {}".format(msg.slot_number, msg.trace_id)
+                    pass
             elif isinstance(msg, AdoptedMessage):
                 # Decrease timeout since the leader does not seem to
                 # be competing with another leader.
                 if self.timeout > TIMEOUTSUBTRACT:
                     self.timeout = self.timeout - TIMEOUTSUBTRACT
-                    print self.id, "Timeout decreased: ", self.timeout
+                    # print self.id, "Timeout decreased: ", self.timeout
                 if self.ballot_number == msg.ballot_number:
                     pmax = {}
                     # For every slot number add the proposal with
@@ -74,7 +78,7 @@ class Leader(Process):
                         if pv.slot_number not in pmax or \
                               pmax[pv.slot_number] < pv.ballot_number:
                             pmax[pv.slot_number] = pv.ballot_number
-                            self.proposals[pv.slot_number] = pv.command
+                            self.proposals[pv.slot_number] = pv
                     # Start a commander (i.e. run Phase 2) for every
                     # proposal (from the beginning)
                     for sn in self.proposals:
@@ -83,22 +87,23 @@ class Leader(Process):
                                                           str(self.ballot_number),
                                                           str(sn)),
                                   self.id, self.config.acceptors, self.config.replicas,
-                                  self.ballot_number, sn, self.proposals.get(sn))
+                                  self.ballot_number, sn, self.proposals.get(sn).command, self.proposals.get(sn).trace_id)
                     self.active = True
             elif isinstance(msg, PreemptedMessage):
                 # The leader is competing with another leader
                 if msg.ballot_number.leader_id > self.id:
                     # Increase timeout because the other leader has priority
                     self.timeout = self.timeout * TIMEOUTMULTIPLY
-                    print self.id, "Timeout increased: ", self.timeout
+                    # print self.id, "Timeout increased: ", self.timeout
                 if msg.ballot_number > self.ballot_number:
                     self.active = False
                     self.ballot_number = BallotNumber(msg.ballot_number.round+1,
                                                       self.id)
                     Scout(self.env, "scout:%s:%s" % (str(self.id),
                                                      str(self.ballot_number)),
-                          self.id, self.config.acceptors, self.ballot_number)
+                          self.id, self.config.acceptors, self.ballot_number, msg.trace_id)
 
             else:
-                print "Leader: unknown msg type"
+                # print "Leader: unknown msg type"
+                pass
             sleep(self.timeout)

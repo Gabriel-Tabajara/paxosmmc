@@ -9,7 +9,7 @@ class Commander(Process):
     number, slot number and command triple.
     """
     def __init__(self, env, id, leader, acceptors, replicas,
-                             ballot_number, slot_number, command):
+                             ballot_number, slot_number, command, trace_id):
         Process.__init__(self, env, id)
         self.leader = leader
         self.acceptors = acceptors
@@ -17,6 +17,7 @@ class Commander(Process):
         self.ballot_number = ballot_number
         self.slot_number = slot_number
         self.command = command
+        self.trace_id = trace_id
         self.env.addProc(self)
 
     def body(self):
@@ -41,20 +42,22 @@ class Commander(Process):
         """
         waitfor = set()
         for a in self.acceptors:
-            self.sendMessage(a, P2aMessage(self.id, self.ballot_number, self.slot_number, self.command))
+            self.sendMessage(a, P2aMessage(self.id, self.ballot_number, self.slot_number, self.command, self.trace_id))
+            # print "Commander %s sending P2aMessage to {} {} {}" , a, self.id, self.trace_id
             waitfor.add(a)
 
         while True:
             msg = self.getNextMessage()
+            # print "Commander %s received %s" % (self.id, msg)
             if isinstance(msg, P2bMessage):
                 if self.ballot_number == msg.ballot_number and msg.src in waitfor:
                     waitfor.remove(msg.src)
                     if len(waitfor) < float(len(self.acceptors))/2:
                         for r in self.replicas:
-                            self.sendMessage(r, DecisionMessage(self.id, self.slot_number, self.command))
+                            self.sendMessage(r, DecisionMessage(self.id, self.slot_number, self.command, msg.trace_id))
                         return
                 else:
-                    self.sendMessage(self.leader, PreemptedMessage(self.id, msg.ballot_number))
+                    self.sendMessage(self.leader, PreemptedMessage(self.id, msg.ballot_number, msg.trace_id))
                     return
 
 

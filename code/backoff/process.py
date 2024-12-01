@@ -11,6 +11,7 @@ class Process(Thread):
         self.inbox = multiprocessing.Manager().Queue()
         self.env = env
         self.id = id
+        self.stop = False
 
     def run(self):
         try:
@@ -27,3 +28,12 @@ class Process(Thread):
 
     def deliver(self, msg):
         self.inbox.put(msg)
+
+    def stop_process(self):
+        self.stop = True
+        # try:
+        #     self.server_socket.close()
+        # except Exception as e:
+        #     print(f"Error closing socket: {e}")
+        self.listener_thread.join()
+        # self.env.release_network_address((self.host, self.port))

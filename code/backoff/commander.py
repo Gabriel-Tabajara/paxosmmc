@@ -46,7 +46,7 @@ class Commander(Process):
             # print "Commander %s sending P2aMessage to {} {} {}" , a, self.id, self.trace_id
             waitfor.add(a)
 
-        while True:
+        while not self.stop:
             msg = self.getNextMessage()
             # print "Commander %s received %s" % (self.id, msg)
             if isinstance(msg, P2bMessage):
@@ -59,5 +59,6 @@ class Commander(Process):
                 else:
                     self.sendMessage(self.leader, PreemptedMessage(self.id, msg.ballot_number, msg.trace_id))
                     return
+        self.stop_process()
 
 

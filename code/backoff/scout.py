@@ -41,7 +41,7 @@ class Scout(Process):
             waitfor.add(a)
 
         pvalues = set()
-        while True:
+        while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, P1bMessage):
                 if self.ballot_number == msg.ballot_number and msg.src in waitfor:
@@ -61,4 +61,5 @@ class Scout(Process):
             else:
                 # print "Scout: unexpected msg"
                 pass
+        self.stop_process()
 

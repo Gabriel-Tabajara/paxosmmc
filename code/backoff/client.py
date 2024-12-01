@@ -19,7 +19,7 @@ class Client(Process):
         print 'Here I am: ', self.id
 
         t0 = time.time()
-        while True:
+        while not self.stop:
             t_end = t0 + self.duration
             t1 = time.time()
             # print 'Time: {} ClientId: {}\n'.format(t1 - (t0 + self.duration), self.id)

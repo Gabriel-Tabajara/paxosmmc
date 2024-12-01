@@ -49,7 +49,7 @@ class Leader(Process):
         print "Here I am: ", self.id
         Scout(self.env, "scout:%s:%s" % (str(self.id), str(self.ballot_number)),
                     self.id, self.config.acceptors, self.ballot_number, None)
-        while True:
+        while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, ProposeMessage):
                 # print self.id, ": received propose", msg.command, msg.slot_number, msg.trace_id

@@ -35,7 +35,7 @@ class Acceptor(Process):
         message containing its current ballot number.
         """
         print "Here I am: ", self.id
-        while True:
+        while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, P1aMessage):
                 if msg.ballot_number > self.ballot_number:

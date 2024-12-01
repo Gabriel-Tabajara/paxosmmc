@@ -90,7 +90,7 @@ class Replica(Process):
         later time. Next, the replica invokes perform().
         """
         print "Here I am: ", self.id
-        while True:
+        while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, RequestMessage):
                 # print self.id, ": received request", msg.command, msg.trace_id

@@ -71,8 +71,8 @@ def write_results(results, max_clients, step):
 def main():
     t0 = time.time()
     env = Env()
-    max_clients = 50
-    step = 5
+    max_clients = 30
+    step = 10
     initialconfig = Config([], [], [])
     experiment_results = run_experiments(env, initialconfig, max_failures=1, max_clients=max_clients, step=step, duration=25)
     print 'Experiment results'

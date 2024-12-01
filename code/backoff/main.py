@@ -16,10 +16,13 @@ def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50
     full_config = env.createReplicas(initialconfig)
     full_config = env.createAcceptors(full_config, 0)
     full_config = env.createLeaders(full_config, 0)
-    for f in range(1, max_failures + 1):  # Variar número de falhas
+    round = 0
+    for f in range(0, max_failures + 1):  # Variar número de falhas
         results[f] = []
-        round = 0
-
+        print 'failures: {}'.format(f)
+        for i in range(f + 1):
+            if i > 0:
+                env.fail_acceptor("acceptor 0.%d" % (i - 1))
         for num_clients in range(step, max_clients + 1, step):  # Varia número de clientes
             clients = []
             # print 'maxclients {} step {}'.format(max_clients, step)
@@ -27,6 +30,7 @@ def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50
                 pid = "client %d.%d" % (round,i)
                 client = Client(env, id=pid, config=full_config, duration=duration, max_requests=NREQUESTS)
                 clients.append(client)
+            round += 1
 
             for client in clients:
                 client.join()
@@ -43,7 +47,6 @@ def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50
             print 'Results for f = {} and num_clients = {}'.format(f, num_clients)
             print 'Total throughput: {}'.format(total_throughput)
             print 'Average latency: {}'.format(avg_latency)
-            round += 1
     print 'Results: {}'.format(results)
     return results
 
@@ -71,10 +74,10 @@ def write_results(results, max_clients, step):
 def main():
     t0 = time.time()
     env = Env()
-    max_clients = 30
-    step = 10
+    max_clients = 75
+    step = 15
     initialconfig = Config([], [], [])
-    experiment_results = run_experiments(env, initialconfig, max_failures=1, max_clients=max_clients, step=step, duration=25)
+    experiment_results = run_experiments(env, initialconfig, max_failures=3, max_clients=max_clients, step=step, duration=25)
     print 'Experiment results'
     print 'Time elapsed: {}'.format(time.time() - t0)
     write_results(experiment_results, max_clients, step)

@@ -35,5 +35,6 @@ class Process(Thread):
         #     self.server_socket.close()
         # except Exception as e:
         #     print(f"Error closing socket: {e}")
-        self.listener_thread.join()
+        self.join()
         # self.env.release_network_address((self.host, self.port))
+        print "Process %s stopped" % self.id

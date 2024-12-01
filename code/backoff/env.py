@@ -52,6 +52,11 @@ class Env:
             initialconfig.leaders.append(pid)
         return initialconfig
     
+    def fail_acceptor(self, id):
+        if id in self.procs:
+            self.procs[id].stop_process()
+
+    
     # def sendRequest(self, initialconfig, c, i):
     #     pid = "client %d.%d" % (c,i)
     #     for r in initialconfig.replicas:

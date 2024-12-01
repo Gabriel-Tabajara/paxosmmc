@@ -31,10 +31,5 @@ class Process(Thread):
 
     def stop_process(self):
         self.stop = True
-        # try:
-        #     self.server_socket.close()
-        # except Exception as e:
-        #     print(f"Error closing socket: {e}")
         self.join()
-        # self.env.release_network_address((self.host, self.port))
         print "Process %s stopped" % self.id

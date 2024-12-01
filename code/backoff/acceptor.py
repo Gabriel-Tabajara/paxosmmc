@@ -44,7 +44,6 @@ class Acceptor(Process):
             elif isinstance(msg, P2aMessage):
                 if msg.ballot_number == self.ballot_number:
                     self.accepted.add(PValue(msg.ballot_number,msg.slot_number,msg.command,msg.trace_id))
-                # print "Acceptor %s sending P2bMessage to %s" % (self.id, msg)
                 self.sendMessage(msg.src, P2bMessage(self.id, self.ballot_number, msg.slot_number, msg.trace_id))
         if self.stop:
             print "Acceptor %s Fail" % self.id

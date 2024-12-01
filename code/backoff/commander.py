@@ -43,12 +43,10 @@ class Commander(Process):
         waitfor = set()
         for a in self.acceptors:
             self.sendMessage(a, P2aMessage(self.id, self.ballot_number, self.slot_number, self.command, self.trace_id))
-            # print "Commander %s sending P2aMessage to {} {} {}" , a, self.id, self.trace_id
             waitfor.add(a)
 
         while not self.stop:
             msg = self.getNextMessage()
-            # print "Commander %s received %s" % (self.id, msg)
             if isinstance(msg, P2bMessage):
                 if self.ballot_number == msg.ballot_number and msg.src in waitfor:
                     waitfor.remove(msg.src)

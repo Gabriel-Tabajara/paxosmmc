@@ -56,13 +56,6 @@ class Env:
         if id in self.procs:
             self.procs[id].stop_process()
 
-    
-    # def sendRequest(self, initialconfig, c, i):
-    #     pid = "client %d.%d" % (c,i)
-    #     for r in initialconfig.replicas:
-    #         cmd = Command(pid,0,"operation %d.%d" % (c,i))
-    #         self.sendMessage(r, RequestMessage(pid,cmd))
-
     def run(self):
         initialconfig = Config([], [], [])
         c = 0

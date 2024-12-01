@@ -58,8 +58,5 @@ class Scout(Process):
                                      PreemptedMessage(self.id,
                                                       msg.ballot_number, self.trace_id))
                     return
-            else:
-                # print "Scout: unexpected msg"
-                pass
         self.stop_process()
 

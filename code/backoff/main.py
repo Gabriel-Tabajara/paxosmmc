@@ -13,7 +13,7 @@ def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50
     full_config = env.createAcceptors(full_config, 0)
     full_config = env.createLeaders(full_config, 0)
     round = 0
-    for f in range(1, max_failures + 1): 
+    for f in range(0, max_failures + 1): 
         results[f] = []
         print(f'failures: {f}')
         for i in range(f + 1):
@@ -46,17 +46,17 @@ def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50
 
 def write_results(results, max_clients, step):
     for f, data in results.items():
-        with open(f"logs/results/2results_f_{f}_mx_{max_clients}_step_{step}.log", "w") as file:
+        with open(f"logs/results/results_f_{f}_mx_{max_clients}_step_{step}.log", "w") as file:
             for throughput, latency in data:
                 file.write(f"{throughput} {latency}\n")
     
 def main():
     t0 = time.time()
     env = Env()
-    max_clients = 250
-    step = 50
+    max_clients = 20
+    step = 10
     initialconfig = Config([], [], [])
-    experiment_results = run_experiments(env, initialconfig, max_failures=1, max_clients=max_clients, step=step, duration=90)
+    experiment_results = run_experiments(env, initialconfig, max_failures=3, max_clients=max_clients, step=step, duration=10)
     print('Experiment results')
     print(f'Time elapsed: {time.time() - t0}')
     write_results(experiment_results, max_clients, step)

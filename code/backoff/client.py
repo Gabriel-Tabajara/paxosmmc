@@ -7,7 +7,7 @@ import time
 
 class Client(Process):
     def __init__(self, env, id, config, duration=60, max_requests=None):
-        super().__init__(env, id)  # Use Python 3-style super()
+        super().__init__(env, id) 
         self.duration = duration
         self.max_requests = max_requests
         self.latencies = []
@@ -37,11 +37,10 @@ class Client(Process):
 
         avg_latency = sum(self.latencies) / len(self.latencies) if self.latencies else 0
 
-        # Optionally log the results (uncomment if needed)
-        # with open(f"logs/clientes/client_{self.id}_results.log", "w") as log_file:
-        #     log_file.write(f"Throughput: {throughput} req/s\n")
-        #     log_file.write(f"Average Latency: {avg_latency} s\n")
-        #     log_file.write(f"Latencies: {self.latencies}\n")
+        with open(f"logs/clientes/client_{self.id}_results.log", "w") as log_file:
+            log_file.write(f"Throughput: {throughput} req/s\n")
+            log_file.write(f"Average Latency: {avg_latency} s\n")
+            log_file.write(f"Latencies: {self.latencies}\n")
 
         self.result = (throughput, avg_latency)
 
@@ -58,7 +57,7 @@ class Client(Process):
             for r in self.config.replicas:
                 cmd = Command(self.id, 0, f"operation 0.{operation_number}")
                 self.sendMessage(r, RequestMessage(self.id, cmd))
-            msg = self.getNextMessage()  # Assuming this blocks until a message is received
+            msg = self.getNextMessage()
 
             t2 = time.time()
 

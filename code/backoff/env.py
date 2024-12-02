@@ -13,9 +13,9 @@ NACCEPTORS = 7
 NREPLICAS = 1
 NLEADERS = 1
 
-# Not used in the current implementation
+# Nao usado na implementacao do T2
 NREQUESTS = 1
-# Not used in the current implementation
+# Nao usado na implementacao do T2
 NCONFIGS = 3
 
 class Env:

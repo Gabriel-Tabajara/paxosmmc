@@ -82,10 +82,6 @@ class Leader(Process):
                         )
                     self.active = True
             elif isinstance(msg, PreemptedMessage):
-                # Handle preemption messages
-                # print(f"Bullet number: {self.ballot_number} Preempted by: {msg.ballot_number}")
-                # print(f"Bullet number: {self.ballot_number[0]} {self.ballot_number[1]}")
-                # print(f"Bullet number: {self.ballot_number.round} {self.ballot_number.leader_id}")
                 if msg.ballot_number.leader_id > self.id:
                     self.timeout *= TIMEOUTMULTIPLY
                 if msg.ballot_number > self.ballot_number:

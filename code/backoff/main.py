@@ -53,8 +53,8 @@ def write_results(results, max_clients, step):
 def main():
     t0 = time.time()
     env = Env()
-    max_clients = 20
-    step = 10
+    max_clients = 250
+    step = 50
     initialconfig = Config([], [], [])
     experiment_results = run_experiments(env, initialconfig, max_failures=3, max_clients=max_clients, step=step, duration=10)
     print('Experiment results')

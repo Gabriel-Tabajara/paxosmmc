@@ -5,9 +5,6 @@ import threading
 from env import Env, Config
 from client import Client
 
-NACCEPTORS = 7
-NREPLICAS = 3
-NLEADERS = 3
 NREQUESTS = 1
 
 def run_experiments(env, initialconfig, max_failures=3, max_clients=200, step=50, duration=60):
@@ -56,8 +53,8 @@ def write_results(results, max_clients, step):
 def main():
     t0 = time.time()
     env = Env()
-    max_clients = 60
-    step = 20
+    max_clients = 50
+    step = 5
     initialconfig = Config([], [], [])
     experiment_results = run_experiments(env, initialconfig, max_failures=1, max_clients=max_clients, step=step, duration=25)
     print 'Experiment results'

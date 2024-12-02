@@ -6,10 +6,13 @@ from process import Process
 from replica import Replica
 from utils import *
 
-NACCEPTORS = 7
-NREPLICAS = 3
-NLEADERS = 3
+NACCEPTORS = 3
+NREPLICAS = 1
+NLEADERS = 1
+
+#Nao usado na implementacao do T2
 NREQUESTS = 1
+#Nao usado na implementacao do T2
 NCONFIGS = 3
 
 class Env:
@@ -54,6 +57,7 @@ class Env:
     
     def fail_acceptor(self, id):
         if id in self.procs:
+            print 'Entrou 4'
             self.procs[id].stop_process()
 
     def run(self):

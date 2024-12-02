@@ -31,5 +31,4 @@ class Process(Thread):
 
     def stop_process(self):
         self.stop = True
-        self.join()
         print "Process %s stopped" % self.id

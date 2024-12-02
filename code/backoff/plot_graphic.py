@@ -16,6 +16,6 @@ def plot_results(results):
 
 if __name__ == "__main__":
     results = {}
-    with open("logs/testes/results_f_1_mx_60_step_20.log", "r") as f:
+    with open("logs/testes/results_f_1_mx_50_step_5.log", "r") as f:
         results[1] = [tuple(map(float, line.split())) for line in f.readlines()]
     plot_results(results)

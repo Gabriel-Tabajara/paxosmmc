@@ -21,7 +21,7 @@ class Leader(Process):
         self.ballot_number = BallotNumber(0, self.id)
         self.active = False
         self.proposals = {}
-        self.timeout = 1.0
+        self.timeout = 0.0
         self.config = config
         self.env.addProc(self)
 

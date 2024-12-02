@@ -57,7 +57,6 @@ class Env:
     
     def fail_acceptor(self, id):
         if id in self.procs:
-            print 'Entrou 4'
             self.procs[id].stop_process()
 
     def run(self):

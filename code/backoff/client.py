@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import threading
 from message import RequestMessage
 from process import Process
 from env import Command
@@ -6,7 +7,7 @@ import time
 
 class Client(Process):
     def __init__(self, env, id, config, duration=60, max_requests=None):
-        super(Client, self).__init__(env, id)
+        super().__init__(env, id)  # Use Python 3-style super()
         self.duration = duration
         self.max_requests = max_requests
         self.latencies = []
@@ -16,9 +17,35 @@ class Client(Process):
         self.env.addProc(self)
 
     def body(self):
-        print 'Here I am: ', self.id
+        print(f"Here I am: {self.id}")
 
         t0 = time.time()
+
+        # Create a thread for sending requests
+        doRequest = threading.Thread(target=self.request, args=(t0,))
+        doRequest.daemon = True
+        doRequest.start()
+
+        # Join thread with timeout equal to duration
+        doRequest.join(timeout=self.duration)
+
+        t4 = time.time()
+        if t4 - t0 == 0:
+            throughput = 0
+        else:
+            throughput = self.requests_sent / (t4 - t0)
+
+        avg_latency = sum(self.latencies) / len(self.latencies) if self.latencies else 0
+
+        # Optionally log the results (uncomment if needed)
+        # with open(f"logs/clientes/client_{self.id}_results.log", "w") as log_file:
+        #     log_file.write(f"Throughput: {throughput} req/s\n")
+        #     log_file.write(f"Average Latency: {avg_latency} s\n")
+        #     log_file.write(f"Latencies: {self.latencies}\n")
+
+        self.result = (throughput, avg_latency)
+
+    def request(self, t0):
         while not self.stop:
             t_end = t0 + self.duration
             t1 = time.time()
@@ -29,27 +56,11 @@ class Client(Process):
 
             operation_number = self.id.split('.')[1]
             for r in self.config.replicas:
-                cmd = Command(self.id,0,"operation %d.%s" % (0,operation_number))
-                self.sendMessage(r, RequestMessage(self.id,cmd))
-            msg = self.getNextMessage()
+                cmd = Command(self.id, 0, f"operation 0.{operation_number}")
+                self.sendMessage(r, RequestMessage(self.id, cmd))
+            msg = self.getNextMessage()  # Assuming this blocks until a message is received
 
             t2 = time.time()
 
             self.latencies.append(t2 - t1)
             self.requests_sent += 1
-
-        t4 = time.time()
-        if t4 - t0 == 0:
-            throughput = 0
-        else:
-            throughput = self.requests_sent / (t4 - t0)
-
-        avg_latency = sum(self.latencies) / len(self.latencies) if self.latencies else 0
-
-        # Loga os resultados, Descomentar caso queira gravar os resultados de cada cliente em um arquivo
-        # log_file = open("logs/clientes/client_{}_results.log".format(self.id), "w")
-        # log_file.write("Throughput: {} req/s\n".format(throughput))
-        # log_file.write("Average Latency: {} s\n".format(avg_latency))
-        # log_file.write("Latencies: {}\n".format(self.latencies))
-        # log_file.close()
-        self.result = (throughput, avg_latency)

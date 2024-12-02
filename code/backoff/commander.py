@@ -1,16 +1,16 @@
-from message import P2aMessage,P2bMessage,PreemptedMessage,DecisionMessage
+from message import P2aMessage, P2bMessage, PreemptedMessage, DecisionMessage
 from process import Process
 from utils import Command
 
 class Commander(Process):
     """
     The commander runs what is known as phase 2 of the Synod
-    protocol.  Every commander is created for a specific ballot
-    number, slot number and command triple.
+    protocol. Every commander is created for a specific ballot
+    number, slot number, and command triple.
     """
     def __init__(self, env, id, leader, acceptors, replicas,
-                             ballot_number, slot_number, command, trace_id):
-        Process.__init__(self, env, id)
+                 ballot_number, slot_number, command, trace_id):
+        super().__init__(env, id)  # Use Python 3-style super()
         self.leader = leader
         self.acceptors = acceptors
         self.replicas = replicas
@@ -22,9 +22,9 @@ class Commander(Process):
 
     def body(self):
         """
-        A commander sends a p2a message to all acceptors, and waits
-        for p2b responses. In each such response the ballot number in the
-        message will be greater than the ballot number of the commander.
+        A commander sends a p2a message to all acceptors and waits
+        for p2b responses. In each such response, the ballot number in the
+        message will be compared to the commander's ballot number.
         There are two cases:
 
         - If a commander receives p2b messages with its ballot number
@@ -38,25 +38,32 @@ class Commander(Process):
         ballot is active. This means that the commander's
         ballot number may no longer be able to make progress. In this
         case, the commander notifies its leader about the existence of
-        the higher ballot number, and exits.
+        the higher ballot number and exits.
         """
         waitfor = set()
-        for a in self.acceptors:
-            self.sendMessage(a, P2aMessage(self.id, self.ballot_number, self.slot_number, self.command, self.trace_id))
-            waitfor.add(a)
+        for acceptor in self.acceptors:
+            self.sendMessage(
+                acceptor,
+                P2aMessage(self.id, self.ballot_number, self.slot_number, self.command, self.trace_id)
+            )
+            waitfor.add(acceptor)
 
         while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, P2bMessage):
                 if self.ballot_number == msg.ballot_number and msg.src in waitfor:
                     waitfor.remove(msg.src)
-                    if len(waitfor) < float(len(self.acceptors))/2:
-                        for r in self.replicas:
-                            self.sendMessage(r, DecisionMessage(self.id, self.slot_number, self.command, msg.trace_id))
+                    if len(waitfor) < len(self.acceptors) / 2:
+                        for replica in self.replicas:
+                            self.sendMessage(
+                                replica,
+                                DecisionMessage(self.id, self.slot_number, self.command, msg.trace_id)
+                            )
                         return
                 else:
-                    self.sendMessage(self.leader, PreemptedMessage(self.id, msg.ballot_number, msg.trace_id))
+                    self.sendMessage(
+                        self.leader,
+                        PreemptedMessage(self.id, msg.ballot_number, msg.trace_id)
+                    )
                     return
         self.stop_process()
-
-

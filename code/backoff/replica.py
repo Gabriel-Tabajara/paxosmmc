@@ -1,11 +1,11 @@
 from process import Process
-from message import ProposeMessage,DecisionMessage,RequestMessage, ResponseMessage
+from message import ProposeMessage, DecisionMessage, RequestMessage, ResponseMessage
 from utils import *
 import time
 
 class Replica(Process):
     def __init__(self, env, id, config):
-        Process.__init__(self, env, id)
+        super().__init__(env, id)  # Use super() for initialization
         self.slot_in = self.slot_out = 1
         self.proposals = {}
         self.decisions = {}
@@ -28,14 +28,10 @@ class Replica(Process):
         Propose message to all leaders in the configuration of
         slot_in.
         """
-        while len(self.requests) != 0 and self.slot_in < self.slot_out+WINDOW:
-            # A reconfiguration command is decided in a slot just like
-            # any other command.  However, it does not take effect
-            # until WINDOW slots later. This allows up to WINDOW slots
-            # to have proposals pending.
-            if self.slot_in > WINDOW and self.slot_in-WINDOW in self.decisions:
-                if isinstance(self.decisions[self.slot_in-WINDOW].command, ReconfigCommand):
-                    r,a,l = self.decisions[self.slot_in-WINDOW].command.config.split(';')
+        while len(self.requests) != 0 and self.slot_in < self.slot_out + WINDOW:
+            if self.slot_in > WINDOW and self.slot_in - WINDOW in self.decisions:
+                if isinstance(self.decisions[self.slot_in - WINDOW].command, ReconfigCommand):
+                    r, a, l = self.decisions[self.slot_in - WINDOW].command.config.split(';')
                     self.config = Config(r.split(','), a.split(','), l.split(','))
             if self.slot_in not in self.decisions:
                 received_msg = self.requests.pop(0)
@@ -43,7 +39,7 @@ class Replica(Process):
                 for ldr in self.config.leaders:
                     message = ProposeMessage(self.id, self.slot_in, received_msg.command, received_msg.trace_id)
                     self.sendMessage(ldr, message)
-            self.slot_in +=1
+            self.slot_in += 1
 
     def perform(self, msg):
         """
@@ -90,7 +86,7 @@ class Replica(Process):
         returns it to set requests so it can be proposed again at a
         later time. Next, the replica invokes perform().
         """
-        print "Here I am: ", self.id
+        print("Here I am:", self.id)
         while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, RequestMessage):
@@ -108,8 +104,7 @@ class Replica(Process):
 
     def printSlots(self):
         slots_traces = {}
-        for self.slot_out in self.decisions:
-            slots_traces[self.slot_out] = self.decisions[self.slot_out].trace_id
-        print 'Slots: ', slots_traces
-        print '\n\n'
-     
+        for slot in self.decisions:
+            slots_traces[slot] = self.decisions[slot].trace_id
+        print('Slots:', slots_traces)
+        print('\n\n')

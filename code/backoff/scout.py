@@ -7,7 +7,7 @@ class Scout(Process):
     Every scout is created for a specific ballot number.
     """
     def __init__(self, env, id, leader, acceptors, ballot_number, trace_id):
-        Process.__init__(self, env, id)
+        super().__init__(env, id)  # Use super() for initialization
         self.leader = leader
         self.acceptors = acceptors
         self.ballot_number = ballot_number
@@ -47,7 +47,7 @@ class Scout(Process):
                 if self.ballot_number == msg.ballot_number and msg.src in waitfor:
                     pvalues.update(msg.accepted)
                     waitfor.remove(msg.src)
-                    if len(waitfor) < float(len(self.acceptors))/2:
+                    if len(waitfor) < float(len(self.acceptors)) / 2:
                         self.sendMessage(self.leader,
                                          AdoptedMessage(self.id,
                                                         self.ballot_number,
@@ -59,4 +59,3 @@ class Scout(Process):
                                                       msg.ballot_number, self.trace_id))
                     return
         self.stop_process()
-

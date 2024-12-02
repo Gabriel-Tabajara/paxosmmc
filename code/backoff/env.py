@@ -1,4 +1,7 @@
-import os, signal, sys, time
+import os
+import signal
+import sys
+import time
 from acceptor import Acceptor
 from leader import Leader
 from message import RequestMessage
@@ -6,13 +9,13 @@ from process import Process
 from replica import Replica
 from utils import *
 
-NACCEPTORS = 3
+NACCEPTORS = 7
 NREPLICAS = 1
 NLEADERS = 1
 
-#Nao usado na implementacao do T2
+# Not used in the current implementation
 NREQUESTS = 1
-#Nao usado na implementacao do T2
+# Not used in the current implementation
 NCONFIGS = 3
 
 class Env:
@@ -36,21 +39,21 @@ class Env:
 
     def createReplicas(self, initialconfig):
         for i in range(NREPLICAS):
-            pid = "replica %d" % i
+            pid = f"replica {i}"
             Replica(self, pid, initialconfig)
             initialconfig.replicas.append(pid)
         return initialconfig
     
     def createAcceptors(self, initialconfig, c):
         for i in range(NACCEPTORS):
-            pid = "acceptor %d.%d" % (c,i)
+            pid = f"acceptor {c}.{i}"
             Acceptor(self, pid)
             initialconfig.acceptors.append(pid)
         return initialconfig
     
     def createLeaders(self, initialconfig, c):
         for i in range(NLEADERS):
-            pid = "leader %d.%d" % (c,i)
+            pid = f"leader {c}.{i}"
             Leader(self, pid, initialconfig)
             initialconfig.leaders.append(pid)
         return initialconfig
@@ -65,63 +68,62 @@ class Env:
 
         # Create replicas
         for i in range(NREPLICAS):
-            pid = "replica %d" % i
+            pid = f"replica {i}"
             Replica(self, pid, initialconfig)
             initialconfig.replicas.append(pid)
         # Create acceptors (initial configuration)
         for i in range(NACCEPTORS):
-            pid = "acceptor %d.%d" % (c,i)
+            pid = f"acceptor {c}.{i}"
             Acceptor(self, pid)
             initialconfig.acceptors.append(pid)
         # Create leaders (initial configuration)
         for i in range(NLEADERS):
-            pid = "leader %d.%d" % (c,i)
+            pid = f"leader {c}.{i}"
             Leader(self, pid, initialconfig)
             initialconfig.leaders.append(pid)
         # Send client requests to replicas
         for i in range(NREQUESTS):
-            pid = "client %d.%d" % (c,i)
+            pid = f"client {c}.{i}"
             for r in initialconfig.replicas:
-                cmd = Command(pid,0,"operation %d.%d" % (c,i))
-                self.sendMessage(r, RequestMessage(pid,cmd))
+                cmd = Command(pid, 0, f"operation {c}.{i}")
+                self.sendMessage(r, RequestMessage(pid, cmd))
                 time.sleep(1)
 
-        # Create new configurations. The configuration contains the
-        # leaders and the acceptors (but not the replicas).
+        # Create new configurations
         for c in range(1, NCONFIGS):
             config = Config(initialconfig.replicas, [], [])
             # Create acceptors in the new configuration
             for i in range(NACCEPTORS):
-                pid = "acceptor %d.%d" % (c,i)
+                pid = f"acceptor {c}.{i}"
                 Acceptor(self, pid)
                 config.acceptors.append(pid)
             # Create leaders in the new configuration
             for i in range(NLEADERS):
-                pid = "leader %d.%d" % (c,i)
+                pid = f"leader {c}.{i}"
                 Leader(self, pid, config)
                 config.leaders.append(pid)
             # Send reconfiguration request
             for r in config.replicas:
-                pid = "master %d.%d" % (c,i)
-                cmd = ReconfigCommand(pid,0,str(config))
+                pid = f"master {c}.{i}"
+                cmd = ReconfigCommand(pid, 0, str(config))
                 self.sendMessage(r, RequestMessage(pid, cmd))
                 time.sleep(1)
             # Send WINDOW noops to speed up reconfiguration
-            for i in range(WINDOW-1):
-                pid = "master %d.%d" % (c,i)
+            for i in range(WINDOW - 1):
+                pid = f"master {c}.{i}"
                 for r in config.replicas:
-                    cmd = Command(pid,0,"operation noop")
+                    cmd = Command(pid, 0, "operation noop")
                     self.sendMessage(r, RequestMessage(pid, cmd))
                     time.sleep(1)
             # Send client requests to replicas
             for i in range(NREQUESTS):
-                pid = "client %d.%d" % (c,i)
+                pid = f"client {c}.{i}"
                 for r in config.replicas:
-                    cmd = Command(pid,0,"operation %d.%d"%(c,i))
+                    cmd = Command(pid, 0, f"operation {c}.{i}")
                     self.sendMessage(r, RequestMessage(pid, cmd))
                     time.sleep(1)
 
-    def terminate_handler(self, signal, frame):
+    def terminate_handler(self, signum, frame):
         self._graceexit()
 
     def _graceexit(self, exitcode=0):
@@ -131,11 +133,9 @@ class Env:
 
 def main():
     e = Env()
-    e.run()
     signal.signal(signal.SIGINT, e.terminate_handler)
     signal.signal(signal.SIGTERM, e.terminate_handler)
-    signal.pause()
+    e.run()
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

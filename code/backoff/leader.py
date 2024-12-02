@@ -12,12 +12,11 @@ class Leader(Process):
     - ballot_number: a monotonically increasing ballot number
     - active: a boolean flag, initially false
     - proposals: a map of slot numbers to proposed commands in the form
-    of a set of (slot number, command) pairs, initially empty. At any
-    time, there is at most one entry per slot number in the set.
+      of a set of (slot number, command) pairs, initially empty.
     - timeout: time in seconds the leader waits between operations
     """
     def __init__(self, env, id, config):
-        Process.__init__(self, env, id)
+        super().__init__(env, id)
         self.ballot_number = BallotNumber(0, self.id)
         self.active = False
         self.proposals = {}
@@ -28,76 +27,76 @@ class Leader(Process):
     def body(self):
         """
         The leader starts by spawning a scout for its initial ballot
-        number, and then enters into a loop awaiting messages. There
-        are three types of messages that cause transitions:
-
-        - Propose: A replica proposes given command for given slot number
-
-        - Adopted: Sent by a scout, this message signifies that the
-        current ballot number has been adopted by a majority of
-        acceptors. (If an adopted message arrives for an old ballot
-        number, it is ignored.) The set pvalues contains all pvalues
-        accepted by these acceptors prior to the adopted ballot
-        number.
-
-        - Preempted: Sent by either a scout or a commander, it means
-        that some acceptor has adopted the ballot number that is
-        included in the message. If this ballot number is higher than
-        the current ballot number of the leader, it may no longer be
-        possible to use the current ballot number to choose a command.
+        number, and then enters into a loop awaiting messages.
         """
-        print "Here I am: ", self.id
-        Scout(self.env, "scout:%s:%s" % (str(self.id), str(self.ballot_number)),
-                    self.id, self.config.acceptors, self.ballot_number, None)
+        print(f"Here I am: {self.id}")
+        Scout(
+            self.env, 
+            f"scout:{self.id}:{self.ballot_number}", 
+            self.id, 
+            self.config.acceptors, 
+            self.ballot_number, 
+            None
+        )
         while not self.stop:
             msg = self.getNextMessage()
             if isinstance(msg, ProposeMessage):
-                # print self.id, ": received propose", msg.command, msg.slot_number, msg.trace_id
+                # Handle proposal messages
                 if msg.slot_number not in self.proposals:
                     self.proposals[msg.slot_number] = msg
                     if self.active:
-                        Commander(self.env,"commander:%s:%s:%s" % (str(self.id),
-                                                                   str(self.ballot_number),
-                                                                   str(msg.slot_number)),
-                                  self.id, self.config.acceptors, self.config.replicas,
-                                  self.ballot_number, msg.slot_number, msg.command, msg.trace_id)
-                else:
-                    # print "Slot number already in proposals msg.slot_number {} msg.trace_id {}".format(msg.slot_number, msg.trace_id)
-                    pass
+                        Commander(
+                            self.env,
+                            f"commander:{self.id}:{self.ballot_number}:{msg.slot_number}",
+                            self.id,
+                            self.config.acceptors,
+                            self.config.replicas,
+                            self.ballot_number,
+                            msg.slot_number,
+                            msg.command,
+                            msg.trace_id
+                        )
             elif isinstance(msg, AdoptedMessage):
-                # Decrease timeout since the leader does not seem to
-                # be competing with another leader.
+                # Decrease timeout since there's no apparent competition
                 if self.timeout > TIMEOUTSUBTRACT:
-                    self.timeout = self.timeout - TIMEOUTSUBTRACT
+                    self.timeout -= TIMEOUTSUBTRACT
                 if self.ballot_number == msg.ballot_number:
                     pmax = {}
-                    # For every slot number add the proposal with
-                    # the highest ballot number to proposals
+                    # Handle accepted values
                     for pv in msg.accepted:
-                        if pv.slot_number not in pmax or \
-                              pmax[pv.slot_number] < pv.ballot_number:
+                        if pv.slot_number not in pmax or pmax[pv.slot_number] < pv.ballot_number:
                             pmax[pv.slot_number] = pv.ballot_number
                             self.proposals[pv.slot_number] = pv
-                    # Start a commander (i.e. run Phase 2) for every
-                    # proposal (from the beginning)
+                    # Start commanders for all proposals
                     for sn in self.proposals:
-                        Commander(self.env,
-                                  "commander:%s:%s:%s" % (str(self.id),
-                                                          str(self.ballot_number),
-                                                          str(sn)),
-                                  self.id, self.config.acceptors, self.config.replicas,
-                                  self.ballot_number, sn, self.proposals.get(sn).command, self.proposals.get(sn).trace_id)
+                        Commander(
+                            self.env,
+                            f"commander:{self.id}:{self.ballot_number}:{sn}",
+                            self.id,
+                            self.config.acceptors,
+                            self.config.replicas,
+                            self.ballot_number,
+                            sn,
+                            self.proposals.get(sn).command,
+                            self.proposals.get(sn).trace_id
+                        )
                     self.active = True
             elif isinstance(msg, PreemptedMessage):
-                # The leader is competing with another leader
+                # Handle preemption messages
+                # print(f"Bullet number: {self.ballot_number} Preempted by: {msg.ballot_number}")
+                # print(f"Bullet number: {self.ballot_number[0]} {self.ballot_number[1]}")
+                # print(f"Bullet number: {self.ballot_number.round} {self.ballot_number.leader_id}")
                 if msg.ballot_number.leader_id > self.id:
-                    # Increase timeout because the other leader has priority
-                    self.timeout = self.timeout * TIMEOUTMULTIPLY
+                    self.timeout *= TIMEOUTMULTIPLY
                 if msg.ballot_number > self.ballot_number:
                     self.active = False
-                    self.ballot_number = BallotNumber(msg.ballot_number.round+1,
-                                                      self.id)
-                    Scout(self.env, "scout:%s:%s" % (str(self.id),
-                                                     str(self.ballot_number)),
-                          self.id, self.config.acceptors, self.ballot_number, msg.trace_id)
+                    self.ballot_number = BallotNumber(msg.ballot_number.round + 1, self.id)
+                    Scout(
+                        self.env, 
+                        f"scout:{self.id}:{self.ballot_number}", 
+                        self.id, 
+                        self.config.acceptors, 
+                        self.ballot_number, 
+                        msg.trace_id
+                    )
             sleep(self.timeout)

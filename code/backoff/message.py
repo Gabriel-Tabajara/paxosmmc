@@ -15,7 +15,7 @@ class Message:
 
     def print_message(self, message):
         if self.debug:
-            print message
+            print(message)
 
 class P1aMessage(Message):
     """
@@ -23,9 +23,9 @@ class P1aMessage(Message):
     Carries a ballot number.
     """
     def __init__(self, src, ballot_number, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
-        self.print_message("P1aMessage: %s" % (self.__dict__))
+        self.print_message(f"P1aMessage: {self.__dict__}")
 
 class P1bMessage(Message):
     """
@@ -33,10 +33,10 @@ class P1bMessage(Message):
     Carries a ballot number and the set of accepted pvalues.
     """
     def __init__(self, src, ballot_number, accepted, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
         self.accepted = accepted
-        self.print_message("P1bMessage: %s" % (self.__dict__))
+        self.print_message(f"P1bMessage: {self.__dict__}")
 
 class P2aMessage(Message):
     """
@@ -44,11 +44,11 @@ class P2aMessage(Message):
     Carries a ballot number, a slot number and a command.
     """
     def __init__(self, src, ballot_number, slot_number, command, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
         self.slot_number = slot_number
         self.command = command
-        self.print_message("P2aMessage: %s" % (self.__dict__))
+        self.print_message(f"P2aMessage: {self.__dict__}")
 
 class P2bMessage(Message):
     """
@@ -56,10 +56,10 @@ class P2bMessage(Message):
     Carries a ballot number and a slot number.
     """
     def __init__(self, src, ballot_number, slot_number, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
         self.slot_number = slot_number
-        self.print_message("P2bMessage: %s" % (self.__dict__))
+        self.print_message(f"P2bMessage: {self.__dict__}")
 
 class PreemptedMessage(Message):
     """
@@ -67,9 +67,9 @@ class PreemptedMessage(Message):
     Carries a ballot number.
     """
     def __init__(self, src, ballot_number, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
-        self.print_message("PreemptedMessage: %s" % (self.__dict__))
+        self.print_message(f"PreemptedMessage: {self.__dict__}")
 
 class AdoptedMessage(Message):
     """
@@ -77,10 +77,10 @@ class AdoptedMessage(Message):
     Carries a ballot number and the set of accepted pvalues.
     """
     def __init__(self, src, ballot_number, accepted, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.ballot_number = ballot_number
         self.accepted = accepted
-        self.print_message("AdoptedMessage: %s" % (self.__dict__))
+        self.print_message(f"AdoptedMessage: {self.__dict__}")
 
 class DecisionMessage(Message):
     """
@@ -88,10 +88,10 @@ class DecisionMessage(Message):
     Carries a slot number and a command.
     """
     def __init__(self, src, slot_number, command, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.slot_number = slot_number
         self.command = command
-        self.print_message("DecisionMessage: %s" % (self.__dict__))
+        self.print_message(f"DecisionMessage: {self.__dict__}")
 
 class RequestMessage(Message):
     """
@@ -99,9 +99,9 @@ class RequestMessage(Message):
     Carries a command.
     """
     def __init__(self, src, command):
-        Message.__init__(self, src, src)
+        super().__init__(src, src)
         self.command = command
-        self.print_message("RequestMessage: %s" % (self.__dict__))
+        self.print_message(f"RequestMessage: {self.__dict__}")
 
 class ResponseMessage(Message):
     """
@@ -109,10 +109,10 @@ class ResponseMessage(Message):
     Carries a slot number and a command.
     """
     def __init__(self, src, command, slot_number, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.slot_number = slot_number
         self.command = command
-        self.print_message("ResponseMessage: %s" % (self.__dict__))
+        self.print_message(f"ResponseMessage: {self.__dict__}")
 
 class ProposeMessage(Message):
     """
@@ -120,7 +120,7 @@ class ProposeMessage(Message):
     Carries a slot number and a command.
     """
     def __init__(self, src, slot_number, command, trace_id):
-        Message.__init__(self, src, trace_id)
+        super().__init__(src, trace_id)
         self.slot_number = slot_number
         self.command = command
-        self.print_message("ProposeMessage: %s" % (self.__dict__))
+        self.print_message(f"ProposeMessage: {self.__dict__}")
